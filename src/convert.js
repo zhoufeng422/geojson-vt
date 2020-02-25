@@ -1,11 +1,18 @@
 
 import simplify from './simplify';
 import createFeature from './feature';
+import proj4 from 'proj4/dist/proj4';
 
 // converts GeoJSON feature into an intermediate projected JSON vector format with simplification data
+var proj = null;
+var C = 2 * Math.PI * 6378137.0;
 
 export default function convert(data, options) {
     var features = [];
+    if (options.projection) {
+        proj = proj4('WGS84', options.projection);
+    }
+
     if (data.type === 'FeatureCollection') {
         for (var i = 0; i < data.features.length; i++) {
             convertFeature(features, data.features[i], options, i);
@@ -85,8 +92,14 @@ function convertFeature(features, geojson, options, index) {
 }
 
 function convertPoint(coords, out) {
-    out.push(projectX(coords[0]));
-    out.push(projectY(coords[1]));
+    /**
+     * @author: zhoufeng422
+     */
+    var pt = projectXY(coords[0], coords[1]);
+    // out.push(projectX(coords[0]));
+    // out.push(projectY(coords[1]));
+    out.push(pt[0]);
+    out.push(pt[1]);
     out.push(0);
 }
 
@@ -95,8 +108,14 @@ function convertLine(ring, out, tolerance, isPolygon) {
     var size = 0;
 
     for (var j = 0; j < ring.length; j++) {
-        var x = projectX(ring[j][0]);
-        var y = projectY(ring[j][1]);
+        /**
+         * @author: zhoufeng422
+         */
+        var pt = projectXY(ring[j][0], ring[j][1]);
+        // var x = projectX(ring[j][0]);
+        // var y = projectY(ring[j][1]);
+        var x = pt[0];
+        var y = pt[1];
 
         out.push(x);
         out.push(y);
@@ -139,4 +158,21 @@ function projectY(y) {
     var sin = Math.sin(y * Math.PI / 180);
     var y2 = 0.5 - 0.25 * Math.log((1 + sin) / (1 - sin)) / Math.PI;
     return y2 < 0 ? 0 : y2 > 1 ? 1 : y2;
+}
+
+/**
+ * @author: zhoufeng422
+ * @param {number} x  The x component of the position.
+ * @param {number} y  The y component of the position.
+ */
+function projectXY(x, y) {
+    if (proj) {
+        var pt = proj.forward([x, y]);
+        pt[0] = pt[0] / C + 0.5;
+        pt[1] = 0.5 - pt[1] / C;
+
+        return pt;
+    } else {
+        return [projectX(x), projectY(y)];
+    }
 }

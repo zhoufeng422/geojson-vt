@@ -1,6 +1,6 @@
 {
   "name": "geojson-vt",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Slice GeoJSON data into vector tiles efficiently",
   "homepage": "https://github.com/mapbox/geojson-vt",
   "keywords": [
@@ -52,5 +52,11 @@
     "geojson-vt.js",
     "geojson-vt-dev.js",
     "src"
-  ]
+  ],
+  "dependencies": {
+    "proj4": "2.5.0"
+  },
+  "publishConfig": {
+    "registry": "http://cagmss.com:8091/repository/npm-yz/"
+  }
 }
